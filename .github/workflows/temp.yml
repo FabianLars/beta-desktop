@@ -39,9 +39,25 @@ jobs:
 
       - run: |
           pwd
+          echo
           df -h .
+          echo
           ls -la .
+          echo
           cd /tmp/target
+          echo
           pwd
+          echo
           ls -la .
+          echo
           df -h .
+          echo
+          cd /tmp
+          echo
+          pwd
+          echo
+          ls -la .
+          echo
+          df -h .
+          echo
+          pwd -P
