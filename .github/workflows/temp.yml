@@ -72,19 +72,7 @@ jobs:
 
       - run: pnpm install && pnpm build
 
-      - uses: tauri-apps/tauri-action@config-v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
-          releaseName: "App v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
-          prerelease: false
-          #owner: fabianlars-release
-          #repo: mwt
-          #releaseCommitish: c65dd6db4ccbecdcad72f2fed096355e859fe555
-          #includeDebug: true
-          #args: ${{ matrix.settings.args }} -c '{"package":{"productName":"injected name"},"build":{"distDir":"../dist"}}'
-          #updaterJsonKeepUniversal: true
-          #
+      - run: mkdir /tmp/target
+
+      - env: CARGO_TARGET_DIR="/tmp/target"
+        run: pnpm tauri build
