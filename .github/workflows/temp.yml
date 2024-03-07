@@ -74,5 +74,6 @@ jobs:
 
       - run: mkdir /tmp/target
 
-      - env: CARGO_TARGET_DIR="/tmp/target"
+      - env:
+          CARGO_TARGET_DIR: "/tmp/target"
         run: pnpm tauri build
