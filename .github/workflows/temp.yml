@@ -38,8 +38,10 @@ jobs:
       - run: mkdir /tmp/target
 
       - run: |
+          pwd
           df -h .
           ls -la .
           cd /tmp/target
+          pwd
           ls -la .
           df -h .
