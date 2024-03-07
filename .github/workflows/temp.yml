@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: mkdir /tmp/target
+      - run: mkdir /mnt/target
 
       - run: |
           pwd
@@ -44,7 +44,7 @@ jobs:
           echo
           ls -la .
           echo
-          cd /tmp/target
+          cd /mnt/target
           echo
           pwd
           echo
@@ -52,7 +52,7 @@ jobs:
           echo
           df -h .
           echo
-          cd /tmp
+          cd /mnt
           echo
           pwd
           echo
