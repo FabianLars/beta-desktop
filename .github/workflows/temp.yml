@@ -72,7 +72,10 @@ jobs:
 
       - run: pnpm install && pnpm build
 
-      - run: sudo mkdir /mnt/target
+      - run: |
+          sudo mkdir /mnt/target
+          WORKSPACE_OWNER="$(stat -c '%U:%G' "${GITHUB_WORKSPACE}")"
+          sudo chown -R "${WORKSPACE_OWNER}" /mnt/target
 
       - env:
           CARGO_TARGET_DIR: "/mnt/target"
