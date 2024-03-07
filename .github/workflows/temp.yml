@@ -74,6 +74,8 @@ jobs:
 
       - run: mkdir /tmp/target
 
+      - run: cd /tmp/target && df -h .
+
       - env:
           CARGO_TARGET_DIR: "/tmp/target"
         run: pnpm tauri build
