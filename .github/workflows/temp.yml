@@ -26,8 +26,8 @@ jobs:
           #  args: '--target aarch64-apple-darwin'
           - platform: "ubuntu-22.04"
             args: ""
-          #- platform: "windows-latest"
-          #  args: "--target x86_64-pc-windows-msvc"
+          - platform: "windows-latest"
+            args: ""
           #- platform: "windows-latest"
           #  args: "--target i686-pc-windows-msvc"
 
@@ -37,7 +37,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
 
       - name: install dependencies (ubuntu only)
         if: matrix.settings.platform == 'ubuntu-22.04'
@@ -58,25 +58,19 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: pnpm-lock.yaml
 
-      # Remove this step if you use `npm ci` instead of `npm install` since it deletes the node_modules folder.
-      #- name: node_modules cache
-      #  uses: actions/cache@v3
-      #  with:
-      #    path: '**/node_modules'
-      #    key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}
-      #    restore-keys: ${{ runner.os }}-node-
-
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
 
-      - run: pnpm install && pnpm build
+      - run: pnpm install
 
-      - run: |
-          sudo mkdir /mnt/target
-          WORKSPACE_OWNER="$(stat -c '%U:%G' "${GITHUB_WORKSPACE}")"
-          sudo chown -R "${WORKSPACE_OWNER}" /mnt/target
-
-      - env:
-          CARGO_TARGET_DIR: "/mnt/target"
-        run: pnpm tauri build
+      - uses: tauri-apps/tauri-action@fix/configtoml-build-target
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: 'App v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
+          #args: ${{ matrix.settings.args }}
