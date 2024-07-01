@@ -84,8 +84,9 @@ jobs:
           base_image: file://$RUNNER_TEMP/cache.img
           cpu: ${{ matrix.cpu }}
           bind_mount_repository: true
-          image_additional_mb: 10240
+          image_additional_mb: 15360
           optimize_image: no
+          exit_on_fail: no
           commands: |
             # Prevent Rust from complaining about $HOME not matching eid home
             export HOME=/root
