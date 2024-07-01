@@ -44,7 +44,7 @@ jobs:
         id: cache
         with:
           path: /mnt/cache/cache.img
-          key: image-cache-key-1
+          key: image-cache-${{ matrix.arch }}-1
           save-always: true
 
       - name: Setup image
