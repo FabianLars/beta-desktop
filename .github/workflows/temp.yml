@@ -49,6 +49,7 @@ jobs:
           base_image: ${{ matrix.base_image }}
           cpu: ${{ matrix.cpu }}
           bind_mount_repository: true
+          image_additional_mb: 2048
           optimize_image: no
           commands: |
             # Prevent Rust from complaining about $HOME not matching eid home
