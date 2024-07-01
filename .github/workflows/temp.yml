@@ -87,6 +87,14 @@ jobs:
           image_additional_mb: 10240
           optimize_image: no
           commands: |
+            # Prevent Rust from complaining about $HOME not matching eid home
+            export HOME=/root
+
+            # Workaround to CI worker being stuck on Updating crates.io index
+            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+
+            . "$HOME/.cargo/env"
+
             # Install frontend dependencies
             npm install
 
