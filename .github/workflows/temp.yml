@@ -33,11 +33,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Setup cache dir on /mnt
+        run: |
+          sudo mkdir /mnt/cache
+          WORKSPACE_OWNER="$(stat -c '%U:%G' "${GITHUB_WORKSPACE}")"
+          sudo chown -R "${WORKSPACE_OWNER}" /mnt/cache
+
       - name: Setup image cache
         uses: actions/cache@v4
         id: cache
         with:
-          path: /mnt/cache.img
+          path: /mnt/cache/cache.img
           key: image-cache-key-1
           save-always: true
 
@@ -70,7 +76,7 @@ jobs:
       - name: Move and rename image with dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          mv ${{ steps.install_deps.outputs.image }} /mnt/cache.img
+          mv ${{ steps.install_deps.outputs.image }} /mnt/cache/cache.img
 
       - name: Cache rust build artifacts
         uses: Swatinem/rust-cache@v2
@@ -81,7 +87,7 @@ jobs:
       - name: Build app
         uses: pguyot/arm-runner-action@v2.6.5
         with:
-          base_image: file:///mnt/cache.img
+          base_image: file:///mnt/cache/cache.img
           cpu: ${{ matrix.cpu }}
           bind_mount_repository: true
           image_additional_mb: 15360
