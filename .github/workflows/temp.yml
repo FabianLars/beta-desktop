@@ -65,7 +65,7 @@ jobs:
             curl https://sh.rustup.rs -sSf | sh -s -- -y
             . "$HOME/.cargo/env"
             curl -fsSL https://deb.nodesource.com/setup_lts.x | bash
-            apt-get install -y nodejs npm
+            apt-get install -y nodejs
 
       - name: Move and rename image with dependencies
         if: steps.cache.outputs.cache-hit != 'true'
