@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache@v4
         id: cache
         with:
-          path: $RUNNER_TEMP/cache.img
+          path: /mnt/cache.img
           key: image-cache-key-1
           save-always: true
 
@@ -70,7 +70,7 @@ jobs:
       - name: Move and rename image with dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          mv ${{ steps.install_deps.outputs.image }} $RUNNER_TEMP/cache.img
+          mv ${{ steps.install_deps.outputs.image }} /mnt/cache.img
 
       - name: Cache rust build artifacts
         uses: Swatinem/rust-cache@v2
@@ -81,7 +81,7 @@ jobs:
       - name: Build app
         uses: pguyot/arm-runner-action@v2.6.5
         with:
-          base_image: file://$RUNNER_TEMP/cache.img
+          base_image: file:///mnt/cache.img
           cpu: ${{ matrix.cpu }}
           bind_mount_repository: true
           image_additional_mb: 15360
