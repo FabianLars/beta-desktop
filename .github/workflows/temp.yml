@@ -33,13 +33,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: pguyot/arm-runner-action@v2.5.2
+      - name: Setup image cache
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: $RUNNER_TEMP/cache.img
+          key: image-cache-key-1
+          save-always: true
+
+      - name: Setup image
+        uses: pguyot/arm-runner-action@v2.5.2
+        id: install_deps
+        if: steps.cache.outputs.cache-hit != 'true'
         with:
           base_image: ${{ matrix.base_image }}
           cpu: ${{ matrix.cpu }}
           bind_mount_repository: true
           image_additional_mb: 10240
-          optimize_image: false
+          optimize_image: no
           commands: |
             # Prevent Rust from complaining about $HOME not matching eid home
             export HOME=/root
@@ -50,17 +61,37 @@ jobs:
             # Install setup prerequisites
             apt-get update -y --allow-releaseinfo-change
             apt-get autoremove -y
-            apt-get install -y curl npm libwebkit2gtk-4.1-dev build-essential libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+            apt-get install -y curl libwebkit2gtk-4.1-dev build-essential libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
             curl https://sh.rustup.rs -sSf | sh -s -- -y
             . "$HOME/.cargo/env"
             curl -fsSL https://deb.nodesource.com/setup_lts.x | bash
-            apt-get install -y nodejs
+            apt-get install -y nodejs npm
 
+      - name: Move and rename image with dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mv ${{ steps.install_deps. outputs.image }} $RUNNER_TEMP/cache.img
+
+      - name: Cache rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-on-failure: true
+
+      - name: Build app
+        uses: pguyot/arm-runner-action@v2.5.2
+        with:
+          base_image: file://$RUNNER_TEMP/cache.img
+          cpu: ${{ matrix.cpu }}
+          bind_mount_repository: true
+          image_additional_mb: 10240
+          optimize_image: no
+          commands: |
             # Install frontend dependencies
             npm install
 
             # Build the application
-            npm run tauri build
+            npm run tauri build -- --verbose
 
             ls src-tauri/target/release/bundle/deb
             ls src-tauri/target/release/bundle/rpm
@@ -82,5 +113,5 @@ jobs:
       - name: Upload appimage bundle
         uses: actions/upload-artifact@v3
         with:
-          name: RPM Bundle
-          path: ${{ github.workspace }}/src-tauri/target/release/bundle/appimage/appname_0.0.0-_${{ matrix.deb }}.AppImage
+          name: AppImage Bundle
+          path: ${{ github.workspace }}/src-tauri/target/release/bundle/appimage/appname_0.0.0-_${{ matrix.appimage }}.AppImage

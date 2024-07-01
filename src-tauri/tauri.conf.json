@@ -1,5 +1,5 @@
 {
-  "productName": "beta-desktop",
+  "productName": "appname",
   "version": "0.0.0",
   "identifier": "com.tauri.devx",
   "build": {
