@@ -10,67 +10,77 @@ env:
   RUSTFLAGS: "-W unreachable-pub -W rust-2021-compatibility"
 
 jobs:
-  publish-tauri:
-    permissions: write-all
+  build:
+    runs-on: ubuntu-22.04
+
     strategy:
-      fail-fast: false
       matrix:
-        settings:
-          #- platform: "macos-latest"
-          #  args: "--target universal-apple-darwin"
-          #- platform: 'macos-latest'
-          #  args: '--target x86_64-apple-darwin'
-          #- platform: 'macos-latest'
-          #  args: '--target aarch64-apple-darwin'
-          #- platform: 'macos-latest'
-          #  args: '--target aarch64-apple-darwin'
-          #- platform: "ubuntu-22.04"
-          #  args: ""
-          - platform: "windows-latest"
-            args: ""
-          #- platform: "windows-latest"
-          #  args: "--target i686-pc-windows-msvc"
+        arch: [aarch64, armv7l]
+        include:
+          - arch: aarch64
+            cpu: cortex-a72
+            base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv8-Bookworm.img.xz
+            deb: arm64
+            rpm: aarch64
+            appimage: aarch64
+          - arch: armv7l
+            cpu: cortex-a53
+            deb: armhfp
+            rpm: arm
+            appimage: armhf
+            base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv7-Bookworm.img.xz
 
-    runs-on: ${{ matrix.settings.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: pguyot/arm-runner-action@v2.5.2
         with:
-          targets: x86_64-apple-darwin,aarch64-apple-darwin
+          base_image: ${{ matrix.base_image }}
+          cpu: ${{ matrix.cpu }}
+          bind_mount_repository: true
+          image_additional_mb: 10240
+          optimize_image: false
+          commands: |
+            # Prevent Rust from complaining about $HOME not matching eid home
+            export HOME=/root
 
-      - name: install dependencies (ubuntu only)
-        if: matrix.settings.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y webkit2gtk-4.1 librsvg2-dev patchelf
+            # Workaround to CI worker being stuck on Updating crates.io index
+            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
+            # Install setup prerequisites
+            apt-get update -y --allow-releaseinfo-change
+            apt-get autoremove -y
+            apt-get install -y curl npm libwebkit2gtk-4.1-dev build-essential libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            . "$HOME/.cargo/env"
+            curl -fsSL https://deb.nodesource.com/setup_lts.x | bash
+            apt-get install -y nodejs
+
+            # Install frontend dependencies
+            npm install
+
+            # Build the application
+            npm run tauri build
+
+            ls src-tauri/target/release/bundle/deb
+            ls src-tauri/target/release/bundle/rpm
+            ls src-tauri/target/release/bundle/appimage
+
+      # TODO: Combine this with the basic workflow and upload the files to the Release.
+      - name: Upload deb bundle
+        uses: actions/upload-artifact@v3
         with:
-          version: 8.x.x
-          run_install: false
+          name: Debian Bundle
+          path: ${{ github.workspace }}/src-tauri/target/release/bundle/deb/appname_0.0.0_${{ matrix.deb }}.deb
 
-      - name: Setup node and cache for package data
-        uses: actions/setup-node@v3
+      - name: Upload rpm bundle
+        uses: actions/upload-artifact@v3
         with:
-          node-version: "lts/*"
-          cache: "pnpm"
-          cache-dependency-path: pnpm-lock.yaml
+          name: RPM Bundle
+          path: ${{ github.workspace }}/src-tauri/target/release/bundle/rpm/appname_0.0.0-1_${{ matrix.rpm }}.rpm
 
-      - uses: Swatinem/rust-cache@v2
+      - name: Upload appimage bundle
+        uses: actions/upload-artifact@v3
         with:
-          cache-on-failure: true
-
-      - run: pnpm install
-
-      - uses: tauri-apps/tauri-action@fix/configtoml-build-target
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'App v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
-          #args: ${{ matrix.settings.args }}
+          name: RPM Bundle
+          path: ${{ github.workspace }}/src-tauri/target/release/bundle/appimage/appname_0.0.0-_${{ matrix.deb }}.AppImage

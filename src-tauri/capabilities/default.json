@@ -1,6 +1,6 @@
 {
-  "$schema": "./schemas/desktop-schema.json",
-  "identifier": "main-capability",
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main"],
   "permissions": [
@@ -8,8 +8,10 @@
     "event:default",
     "window:default",
     "app:default",
+    "image:default",
     "resources:default",
     "menu:default",
-    "tray:default"
+    "tray:default",
+    "shell:allow-open"
   ]
 }

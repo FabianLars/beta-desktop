@@ -1,13 +1,26 @@
 {
+  "productName": "beta-desktop",
+  "version": "0.0.0",
+  "identifier": "com.tauri.dev",
   "build": {
-    "beforeDevCommand": "pnpm dev",
-    "beforeBuildCommand": "pnpm build",
+    "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
-  "identifier": "com.tauri.betatest",
-  "productName": "ENTER NAME HERE",
-  "version": "0.0.0",
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "beta-desktop",
+        "width": 800,
+        "height": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
@@ -18,24 +31,5 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
-  },
-  "app": {
-    "security": {
-      "csp": null
-    },
-    "windows": [
-      {
-        "fullscreen": false,
-        "resizable": true,
-        "title": "beta-desktop",
-        "width": 800,
-        "height": 600
-      }
-    ]
-  },
-  "plugins": {
-    "shell": {
-      "open": true
-    }
   }
 }
