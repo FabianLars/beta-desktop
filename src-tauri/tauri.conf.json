@@ -1,7 +1,7 @@
 {
   "productName": "beta-desktop",
   "version": "0.0.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.tauri.devx",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
