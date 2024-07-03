@@ -33,11 +33,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup cache dir on /mnt
+      - name: Setup cache dirs on /mnt
         run: |
           sudo mkdir /mnt/cache
+          sudo mkdir /mnt/target
           WORKSPACE_OWNER="$(stat -c '%U:%G' "${GITHUB_WORKSPACE}")"
           sudo chown -R "${WORKSPACE_OWNER}" /mnt/cache
+          sudo chown -R "${WORKSPACE_OWNER}" /mnt/target
+          sudo ln -s /mnt/target ./src-tauri/target
 
       - name: Setup image cache
         uses: actions/cache@v4
@@ -90,7 +93,7 @@ jobs:
           base_image: file:///mnt/cache/cache.img
           cpu: ${{ matrix.cpu }}
           bind_mount_repository: true
-          image_additional_mb: 15360
+          image_additional_mb: 4096
           optimize_image: no
           exit_on_fail: no
           commands: |
