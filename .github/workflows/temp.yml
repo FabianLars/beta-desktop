@@ -33,33 +33,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup cache dirs on /mnt
-        run: |
-          sudo mkdir /mnt/cache
-          sudo mkdir /mnt/target
-          WORKSPACE_OWNER="$(stat -c '%U:%G' "${GITHUB_WORKSPACE}")"
-          sudo chown -R "${WORKSPACE_OWNER}" /mnt/cache
-          sudo chown -R "${WORKSPACE_OWNER}" /mnt/target
-          sudo ln -s /mnt/target ./src-tauri/target
-
-      - name: Setup image cache
-        uses: actions/cache@v4
-        id: cache
+      - name: Cache rust build artifacts
+        uses: Swatinem/rust-cache@v2
         with:
-          path: /mnt/cache/cache.img
-          key: image-cache-${{ matrix.arch }}-1
-          save-always: true
+          workspaces: src-tauri
+          cache-on-failure: true
 
       - name: Setup image
         uses: pguyot/arm-runner-action@v2.6.5
-        id: install_deps
-        if: steps.cache.outputs.cache-hit != 'true'
         with:
           base_image: ${{ matrix.base_image }}
           cpu: ${{ matrix.cpu }}
           bind_mount_repository: true
-          image_additional_mb: 4096
+          image_additional_mb: 10240
           optimize_image: no
+          exit_on_fail: no
           commands: |
             # Prevent Rust from complaining about $HOME not matching eid home
             export HOME=/root
@@ -75,35 +63,6 @@ jobs:
             . "$HOME/.cargo/env"
             curl -fsSL https://deb.nodesource.com/setup_lts.x | bash
             apt-get install -y nodejs
-
-      - name: Move and rename image with dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          mv ${{ steps.install_deps.outputs.image }} /mnt/cache/cache.img
-
-      - name: Cache rust build artifacts
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-          cache-on-failure: true
-
-      - name: Build app
-        uses: pguyot/arm-runner-action@v2.6.5
-        with:
-          base_image: file:///mnt/cache/cache.img
-          cpu: ${{ matrix.cpu }}
-          bind_mount_repository: true
-          image_additional_mb: 4096
-          optimize_image: no
-          exit_on_fail: no
-          commands: |
-            # Prevent Rust from complaining about $HOME not matching eid home
-            export HOME=/root
-
-            # Workaround to CI worker being stuck on Updating crates.io index
-            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
-
-            . "$HOME/.cargo/env"
 
             # Install frontend dependencies
             npm install
