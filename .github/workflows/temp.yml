@@ -39,6 +39,8 @@ jobs:
           workspaces: src-tauri
           cache-on-failure: true
 
+      - run: jq -r .version src-tauri/tauri.conf.json
+
       - name: Setup image
         uses: pguyot/arm-runner-action@v2.6.5
         with:
